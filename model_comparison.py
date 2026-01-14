@@ -9,11 +9,10 @@ from sklearn.model_selection import GroupShuffleSplit
 from sklearn.metrics import accuracy_score, recall_score, precision_score
 from sklearn.preprocessing import MinMaxScaler
 
-# --- CONFIGURATION ---
 DATASETS = {
     "1. Baseline (Old)": "final_trainset.csv",
     "2. Enhanced (Full)": "actual_final_trainset_100pct_enhanced.csv",
-    "3. Hybrid (S-BERT)": "final_hybrid_sbert_trainset.csv" 
+    "3. Hybrid (S-BERT)": "final_hybrid_sbert_trainset.csv" # this is on 30% -> todo: switch to 100pct
 }
 
 def calculate_ranking_success(df_test, score_col, k=5, id_col='child_id'):
@@ -27,7 +26,6 @@ def calculate_ranking_success(df_test, score_col, k=5, id_col='child_id'):
     for _, group in grouped:
         if group['match'].sum() > 0:
             total += 1
-            # Sort by score descending to find the top results
             top_k = group.sort_values(score_col, ascending=False).head(k)
             if top_k['match'].sum() > 0:
                 hits += 1
@@ -45,7 +43,6 @@ def run_performance_audit():
         print(f"\nProcessing {d_name}...")
         df = pd.read_csv(d_path).fillna(0)
         
-        # --- IMPROVED PSEUDO-ID LOGIC FOR BASELINE ---
         id_col = next((c for c in ['child_id', 'id_child', 'id', 'c'] if c in df.columns), None)
         
         if not id_col:
@@ -122,3 +119,4 @@ def run_performance_audit():
 
 if __name__ == "__main__":
     run_performance_audit()
+
