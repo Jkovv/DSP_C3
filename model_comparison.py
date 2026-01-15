@@ -11,7 +11,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 DATASETS = {
     "1. Baseline (Old)": "final_trainset.csv",
-    "2. Enhanced (Full)": "actual_final_trainset_100pct_enhanced.csv",
+    "2. Fixed (Full)": "final_basic_trainset_fixed.csv",
     "3. Hybrid (S-BERT)": "final_hybrid_sbert_trainset_100pct.csv" 
 }
 
