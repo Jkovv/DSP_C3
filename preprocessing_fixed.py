@@ -86,7 +86,7 @@ def run_basic_preprocessing():
                 if p_id is None or p_id not in parent_dict: continue
                 p = parent_dict[p_id]
 
-                # Jaccard Similarity as a simple replacement for embeddings
+                # the actual Jaccard Similarity as a simple replacement for embeddings
                 intersection = len(c_words.intersection(p['words']))
                 union = len(c_words.union(p['words']))
                 jaccard_sim = intersection / union if union > 0 else 0
@@ -106,3 +106,4 @@ def run_basic_preprocessing():
 
 if __name__ == "__main__":
     run_basic_preprocessing()
+
