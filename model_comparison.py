@@ -5,118 +5,103 @@ import xgboost as xgb
 import lightgbm as lgb
 from catboost import CatBoostClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GroupShuffleSplit
-from sklearn.metrics import accuracy_score, recall_score, precision_score
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, recall_score
 
 DATASETS = {
     "1. Baseline (Old)": "final_trainset.csv",
     "2. Enhanced (Full)": "actual_final_trainset_100pct_enhanced.csv",
-    "3. Hybrid (S-BERT)": "final_hybrid_sbert_trainset.csv" # this is on 30% -> todo: switch to 100pct
+    "3. Hybrid (S-BERT)": "final_hybrid_sbert_trainset_100pct.csv" 
 }
 
-def calculate_ranking_success(df_test, score_col, k=5, id_col='child_id'):
-    """Calculates Success@K: Is the correct match in the Top K ranked results?"""
-    if id_col not in df_test.columns:
-        return np.nan
-    
-    grouped = df_test.groupby(id_col)
+def cbs_date_comparison(diff, offset=2, scale=7):  
+    """Original CBS Time Decay function."""
+    return 2**(-(abs(diff) - offset) / scale)
+
+def calculate_cbs_search_success(test_df, k=5):
+    """
+    Search Success: Groups by news item (Child) and checks 
+    if the correct report is in the top 5 suggestions.
+    """
+    id_col = next((c for c in ['child_id', 'id_child', 'id', 'c'] if c in test_df.columns), None)
+    if not id_col: return 0.0
+
+    grouped = test_df.groupby(id_col)
+    total_relevant = 0
     hits = 0
-    total = 0
+    
     for _, group in grouped:
-        if group['match'].sum() > 0:
-            total += 1
-            top_k = group.sort_values(score_col, ascending=False).head(k)
+        if group['match'].sum() > 0: 
+            total_relevant += 1
+            top_k = group.sort_values('probs', ascending=False).head(k)
             if top_k['match'].sum() > 0:
                 hits += 1
-    return hits / total if total > 0 else 0
+                
+    return hits / total_relevant if total_relevant > 0 else 0
 
-def run_performance_audit():
-    unified_results = []
-    scaler = MinMaxScaler()
+def run_final_audit():
+    final_results = []
 
     for d_name, d_path in DATASETS.items():
-        if not os.path.exists(d_path):
-            print(f"Skipping {d_name}: File not found at {d_path}")
-            continue
-        
-        print(f"\nProcessing {d_name}...")
+        if not os.path.exists(d_path): continue
         df = pd.read_csv(d_path).fillna(0)
         
-        id_col = next((c for c in ['child_id', 'id_child', 'id', 'c'] if c in df.columns), None)
+        if 'date_diff_days' in df.columns:
+            df['cbs_date_score'] = df['date_diff_days'].apply(cbs_date_comparison)
         
-        if not id_col:
-            # Dynamic block size: Total Rows / Total Matches
-            num_matches = df['match'].sum()
-            if num_matches > 0:
-                avg_block_size = int(len(df) / num_matches)
-                print(f"  -> Detected {num_matches} matches. Using dynamic block size: {avg_block_size}")
-                df['temp_id'] = np.arange(len(df)) // avg_block_size
-            else:
-                print("  -> Warning: No matches found in baseline. Using fallback block size 50.")
-                df['temp_id'] = np.arange(len(df)) // 50
-            id_col = 'temp_id'
+        y = df['match']
+        X = df.drop(columns=['match'], errors='ignore')
+        
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        
+        # Calculate dynamic imbalance ratio
+        dynamic_ratio = len(y_train[y_train == 0]) / len(y_train[y_train == 1]) if len(y_train[y_train == 1]) > 0 else 1
+        print(f"\nAnalyzing: {d_name} (Imbalance {dynamic_ratio:.2f}:1)")
 
-        # Legacy score logic (Original jac_total vs. Simulated Sum)
-        if 'jac_total' in df.columns:
-            df['legacy_score'] = df['jac_total']
-        else:
-            sim_cols = [c for c in ['sbert_sim', 'title_similarity', 'vector_similarity'] if c in df.columns]
-            count_cols = [c for c in ['num_matches', 'tax_matches', 'numbers_lenmatches', 'taxonomy_lenmatches'] if c in df.columns]
-            
-            score_parts = df[sim_cols].sum(axis=1)
-            if count_cols:
-                scaled_counts = scaler.fit_transform(df[count_cols].sum(axis=1).values.reshape(-1, 1))
-                score_parts += scaled_counts.flatten()
-            df['legacy_score'] = score_parts
+        drop_cols = ['child_id', 'parent_id', 'id', 'id_child', 'id_parent', 'c', 'p']
+        features = [c for c in X_train.columns if c not in drop_cols]
 
-        # 70/30 Split (Randomized but Group-aware to avoid leakage)
-        gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
-        train_idx, test_idx = next(gss.split(df, groups=df[id_col]))
-        train_df, test_df = df.iloc[train_idx], df.iloc[test_idx].copy()
-        
-        exclude = ['match', 'child_id', 'parent_id', 'id', 'id_child', 'c', 'p', 'legacy_score', 'temp_id', 'jac_total']
-        features = [c for c in train_df.columns if c not in exclude]
-        
-        ratio = len(train_df[train_df['match']==0]) / len(train_df[train_df['match']==1])
-        
         models = {
-            "RF": RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1),
-            "XGBoost": xgb.XGBClassifier(scale_pos_weight=ratio, random_state=42, eval_metric='logloss'),
-            "LightGBM": lgb.LGBMClassifier(scale_pos_weight=ratio, random_state=42, verbose=-1),
-            "CatBoost": CatBoostClassifier(scale_pos_weight=ratio, verbose=0, random_state=42)
+            "Old RF (Baseline)": RandomForestClassifier(n_estimators=100, random_state=42),
+            "New RF (Balanced)": RandomForestClassifier(n_estimators=300, class_weight='balanced', random_state=42),
+            "XGBoost (Balanced)": xgb.XGBClassifier(n_estimators=300, scale_pos_weight=dynamic_ratio, random_state=42),
+            "LightGBM (Balanced)": lgb.LGBMClassifier(n_estimators=300, scale_pos_weight=dynamic_ratio, random_state=42, verbose=-1),
+            "CatBoost (Balanced)": CatBoostClassifier(iterations=300, scale_pos_weight=dynamic_ratio, verbose=0, random_state=42)
         }
 
         for m_name, model in models.items():
-            model.fit(train_df[features], train_df['match'])
+            model.fit(X_train[features], y_train)
             
-            probs = model.predict_proba(test_df[features])[:, 1]
-            preds = (probs > 0.5).astype(int)
-            test_df['current_probs'] = probs
-
-            # Statistical Metrics
-            tr_acc = accuracy_score(train_df['match'], model.predict(train_df[features]))
-            te_acc = accuracy_score(test_df['match'], preds)
-            rec = recall_score(test_df['match'], preds, zero_division=0)
-            prec = precision_score(test_df['match'], preds, zero_division=0)
+            # Predictions
+            train_preds = model.predict(X_train[features])
+            test_preds = model.predict(X_test[features])
+            test_probs = model.predict_proba(X_test[features])[:, 1]
             
-            # Success Metrics
-            s1 = calculate_ranking_success(test_df, 'current_probs', k=1, id_col=id_col)
-            s5 = calculate_ranking_success(test_df, 'current_probs', k=5, id_col=id_col)
-            cbs5 = calculate_ranking_success(test_df, 'legacy_score', k=5, id_col=id_col)
+            # Dataframe for Search Success metric
+            eval_df = X_test.copy()
+            eval_df['match'] = y_test.values
+            eval_df['probs'] = test_probs
+            
+            # Calculating Metrics
+            train_acc = accuracy_score(y_train, train_preds)
+            test_acc = accuracy_score(y_test, test_preds)
+            search_success = calculate_cbs_search_success(eval_df, k=5)
+            recall = recall_score(y_test, test_preds, zero_division=0)
+            gap = train_acc - test_acc
 
-            unified_results.append({
-                "Dataset": d_name, "Model": m_name,
-                "Tr_Acc": f"{tr_acc:.4f}", "Te_Acc": f"{te_acc:.4f}",
-                "Gap": f"{tr_acc - te_acc:.4f}", "Recall": f"{rec:.4f}", "Prec": f"{prec:.4f}",
-                "Succ@1": f"{s1:.4f}", "Succ@5": f"{s5:.4f}", "CBS@5": f"{cbs5:.4f}"
+            final_results.append({
+                "Dataset": d_name, "Model": m_name, 
+                "Train_Acc": f"{train_acc:.4f}",
+                "Test_Acc": f"{test_acc:.4f}", 
+                "Search_SS@5": f"{search_success:.4f}", 
+                "Recall(C1)": f"{recall:.4f}", 
+                "Gap": f"{gap:.4f}"
             })
 
-    print("\n" + "="*125)
-    print("FINAL INTEGRATED PERFORMANCE REPORT (DYNAMIC GROUPING)")
-    print("="*125)
-    print(pd.DataFrame(unified_results).to_string(index=False))
+    # Display results
+    report_df = pd.DataFrame(final_results)
+    print("\nFINAL PERFORMANCE MATRIX")
+    print(report_df.to_string(index=False))
 
 if __name__ == "__main__":
-    run_performance_audit()
-
+    run_final_audit()
