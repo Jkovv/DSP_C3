@@ -36,8 +36,8 @@ The difference between Training and Testing accuracy.
 
 1.  **Clone the repository**:
     ```bash
-    git clone [https://github.com/your-username/cbs-linkage-audit.git](https://github.com/your-username/cbs-linkage-audit.git)
-    cd cbs-linkage-audit
+    git clone https://github.com/Jkovv/dsp.git
+    cd dsp
     ```
 
 2.  **Install Dependencies**:
