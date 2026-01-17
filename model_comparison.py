@@ -115,7 +115,7 @@ def run_final_audit():
                 "Recall": f"{rec:.4f}",
                 "Precision": f"{prec:.4f}",
                 "F1-Score": f"{f1:.4f}",
-                # "Succ@1": f"{s1:.4f}", 
+                "Succ@1": f"{s1:.4f}", 
                 # "Succ@5": f"{s5:.4f}", 
                 # "CBS_Legacy@5": f"{leg5:.4f}" 
             })
@@ -127,4 +127,5 @@ def run_final_audit():
 
 if __name__ == "__main__":
     run_final_audit()
+
 
