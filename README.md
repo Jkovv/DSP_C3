@@ -18,7 +18,7 @@ The goal of this project was to solve the critical issue of **overfitting** and 
 
 ### Model & Evaluation
 * **`model_comparison.py`**: The core audit script. It trains and evaluates multiple classifiers (Random Forest, XGBoost, LightGBM, CatBoost) across all datasets to produce a comparative performance matrix.
-* * **`error_analysis.py`**: The extension on the core audit scripts. 
+* **`error_analysis.py`**: The extension on the core audit scripts. 
 
 ## Key Metrics Explained
 
