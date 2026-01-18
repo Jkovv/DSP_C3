@@ -11,9 +11,9 @@ from sentence_transformers import SentenceTransformer, util
 
 ZIP_PATH = 'data.zip'
 TAXONOMY_PATH = 'taxonomie_df.csv' 
-OUTPUT_FILE = 'final_hybrid_sbert_trainset.csv' 
+OUTPUT_FILE = 'final_hybrid_sbert_trainset.csv'
 BATCH_SIZE = 64 # for sbert
-SAMPLE_PCT = 1.0 # vs the 30% sample run
+SAMPLE_PCT = 1.0 # vs the 30% sample run (80%acc) 
 
 print("Loading S-BERT model...")
 sbert_model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
@@ -124,3 +124,4 @@ def run_batched_preprocessing():
 if __name__ == "__main__":
 
     run_batched_preprocessing()
+
