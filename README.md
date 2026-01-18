@@ -25,7 +25,6 @@ Our analysis evaluates the system using two distinct lenses:
 
 ### 1. Generalization (The "Gap")
 The difference between Training and Testing accuracy. 
-* **Legacy Baseline:** Showed a **~50% Gap**, indicating the model was simply memorizing words.
 * **New RF / Hybrid Model:** Achieved a **<0.2% Gap**, proving the model actually understands the context.
 
 ### 2. Ranking Success (Success@K)
