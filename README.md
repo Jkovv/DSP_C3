@@ -26,7 +26,7 @@ Our analysis evaluates the system using two distinct lenses:
 ### 1. Generalization (The "Gap")
 The difference between Training and Testing accuracy. 
 * **Legacy Baseline:** Showed a **~50% Gap**, indicating the model was simply memorizing words.
-* **Hybrid Model:** Achieved a **<0.2% Gap**, proving the model actually understands the context.
+* **New RF / Hybrid Model:** Achieved a **<0.2% Gap**, proving the model actually understands the context.
 
 ### 2. Ranking Success (Success@K)
 * **Success@1**: Tells us if the correct CBS report is the **very first** suggestion. The Hybrid model achieves near **1.0000 (100%)** accuracy here, effectively automating the linkage process.
