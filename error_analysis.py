@@ -49,6 +49,7 @@ def run_cbs_audit():
     model.fit(X_train, train_df['match'])
     test_df['probs'] = model.predict_proba(X_test)[:, 1]
 
+    rows = []
     with zipfile.ZipFile(ZIP_PATH, 'r') as z:
         p_file = next((f for f in z.namelist() if f.endswith('all_parents.csv')), None)
         with z.open(p_file) as f:
@@ -59,7 +60,16 @@ def run_cbs_audit():
         tp = test_df[test_df['match'] == 1].sort_values('probs', ascending=False).iloc[0]
         tp_txt = get_news_body(z, int(tp[id_col]))
         tp_topic = resolve_cbs_theme(tp_txt, df_tax)
+        
         print(f"{'CORRECT':<12} | {tp_topic:<25} | {tp_topic:<25} | {tp_txt[:85]}...")
+        
+        rows.append({
+            "status": "CORRECT",
+            "assigned_topic": tp_topic,
+            "actual_topic": tp_topic,
+            "text": tp_txt
+        })
+
 
         # INCORRECT  
         fp_candidates = test_df[test_df['match'] == 0].sort_values('probs', ascending=False)
@@ -70,7 +80,17 @@ def run_cbs_audit():
             assigned_t = resolve_cbs_theme(p_map.get(p_id, ""), df_tax) if p_id in p_map else "999"
             if assigned_t != actual_t:
                 print(f"{'INCORRECT':<12} | {assigned_t:<25} | {actual_t:<25} | {news_txt[:85]}...")
+                rows.append({
+                    "status": "INCORRECT",
+                    "assigned_topic": assigned_t,
+                    "actual_topic": actual_t,
+                    "text": news_txt
+                })
                 break
+    out_df = pd.DataFrame(rows)
+    out_df.to_csv("topic_error.csv", index=False)
+    print(f"\nSaved topic-level error analysis to topic_error.csv ({len(out_df)} rows)")
+
 
 if __name__ == "__main__":
     run_cbs_audit()
