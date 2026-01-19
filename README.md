@@ -29,8 +29,10 @@ The difference between Training and Testing accuracy.
 * **New RF / Hybrid Model:** Achieved a **<0.2% Gap**, proving the model actually understands the context.
 
 ### 2. Ranking Success (Success@K)
-* **Success@1**: Tells us if the correct CBS report is the **very first** suggestion. The Hybrid model achieves near **1.0000 (100%)** accuracy here, effectively automating the linkage process.
-* **Success@5**: Checks if the match is in the top 5 suggestions. This represents the "search assistant" capability.
+* **Success@1**: Tells us if the correct CBS report is the **very first** suggestion. 
+* **Success@2**: Checks if the match is in the top 2 suggestions.
+* <analogous for success@3-5>
+This represents the "search assistant" capability.
 
 ## Installation
 
