@@ -26,10 +26,6 @@ from sklearn.model_selection import GroupShuffleSplit
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from sklearn.ensemble import RandomForestClassifier
 
-
-# ----------------------------
-# Optional model imports (graceful)
-# ----------------------------
 try:
     from catboost import CatBoostClassifier
     HAS_CATBOOST = True
@@ -49,9 +45,7 @@ except Exception:
     HAS_XGB = False
 
 
-# ----------------------------
 # Utilities
-# ----------------------------
 def infer_id_col(df: pd.DataFrame) -> str:
     for c in ["child_id", "id_child", "id", "c"]:
         if c in df.columns:
@@ -101,9 +95,7 @@ def top1_margin(group: pd.DataFrame, score_col: str) -> float:
     return float(scores[0] - scores[1])
 
 
-# ----------------------------
 # Error taxonomy (explainable heuristics)
-# ----------------------------
 @dataclass
 class ErrorTagConfig:
     near_miss_margin: float = 0.03
@@ -142,9 +134,7 @@ def tag_error_case(row: pd.Series, cfg: ErrorTagConfig) -> List[str]:
     return tags
 
 
-# ----------------------------
 # Model factory
-# ----------------------------
 def resolve_models(model_list: List[str]) -> List[str]:
     out: List[str] = []
     for m in model_list:
@@ -200,9 +190,7 @@ def make_model(name: str, seed: int):
     )
 
 
-# ----------------------------
 # Fit + evaluate one model
-# ----------------------------
 def fit_eval_one_model(
     model_name: str,
     train_df: pd.DataFrame,
@@ -262,10 +250,8 @@ def fit_eval_one_model(
     return met, scored
 
 
-# ----------------------------
 # Extract top-1 error cases (best model per dataset)
-# ----------------------------
-def extract_top1_error_cases(scored: pd.DataFrame, id_col: str, k: int) -> pd.DataFrame:
+    def extract_top1_error_cases(scored: pd.DataFrame, id_col: str, k: int) -> pd.DataFrame:
     rows = []
     for cid, g in scored.groupby(id_col):
         if g["match"].sum() <= 0:
@@ -299,9 +285,7 @@ def extract_top1_error_cases(scored: pd.DataFrame, id_col: str, k: int) -> pd.Da
     return df
 
 
-# ----------------------------
 # Main: compare datasets
-# ----------------------------
 def run(
     datasets: List[str],
     models: List[str],
@@ -415,7 +399,7 @@ def run(
     # Sort: best models first within each dataset
     shown = shown.sort_values(["dataset", "success_at_1", f"success_at_{k}", "test_roc_auc"], ascending=[True, False, False, False])
 
-    print("\n=== DATASET + MODEL COMPARISON (RANKING-FIRST) ===")
+    print("\nDATASET + MODEL COMPARISON (RANKING-FIRST)")
     print(shown.to_string(index=False))
 
     print("\nSaved:")
@@ -426,7 +410,7 @@ def run(
     if not errors_df.empty and "error_tags" in errors_df.columns:
         tag_counts = errors_df["error_tags"].str.split(r"\|").explode().value_counts()
         if len(tag_counts) > 0:
-            print("\n=== TOP-1 ERROR TAG COUNTS (BEST MODEL PER DATASET) ===")
+            print("\nTOP-1 ERROR TAG COUNTS (BEST MODEL PER DATASET)")
             print(tag_counts.to_string())
         else:
             print("\nNo top-1 errors found (best models).")
