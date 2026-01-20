@@ -98,13 +98,13 @@ def run_master_evaluation():
             gap = tr_acc - ts_acc
             auc = roc_auc_score(y_test, ts_probs) if len(np.unique(y_test)) > 1 else 0
             rec = recall_score(y_test, ts_preds, zero_division=0)
-            f1 = f1_score(y_test, ts_preds, zero_division=0)
+            # f1 = f1_score(y_test, ts_preds, zero_division=0)
             succ = calculate_success_k(test_df, 'probs', id_col=id_col)
             
             res = {
                 "Dataset": d_name, "Model": m_name, 
                 "Train_Acc": f"{tr_acc:.4f}", "Test_Acc": f"{ts_acc:.4f}", "Gap": f"{gap:.4f}",
-                "Recall": f"{rec:.4f}", "F1": f"{f1:.4f}", "AUC": f"{auc:.4f}"
+                "Recall": f"{rec:.4f}", "AUC": f"{auc:.4f}"
             }
             res.update({k: f"{v:.4f}" for k, v in succ.items()})
             all_metrics.append(res)
@@ -133,7 +133,7 @@ def run_master_evaluation():
         ax_roc.set_title(f"ROC Curves - {d_name}")
         fig_roc.savefig(f"ROC_{d_name[0]}.png", bbox_inches='tight'); plt.close(fig_roc)
 
-    order = ["Dataset", "Model", "Train_Acc", "Test_Acc", "Gap", "Recall", "F1", "AUC", 
+    order = ["Dataset", "Model", "Train_Acc", "Test_Acc", "Gap", "Recall", "AUC", 
              "Succ@1", "Succ@2", "Succ@3", "Succ@4", "Succ@5"]
     print(pd.DataFrame(all_metrics)[order].to_string(index=False))
 
