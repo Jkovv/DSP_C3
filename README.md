@@ -23,6 +23,56 @@ To ensure scientific validity, the evaluation suite implements:
 
 ## File Structure
 
+### Datasets (still gotta check, but looks alright at first glance)
+
+#### Legacy feature-only trainset (no pair IDs)
+- `final_trainset.csv`
+  - Feature-only dataset used for model training/evaluation in the legacy pipeline.
+  - Each row represents one candidate pair, but this file does not include the original item identifiers (only the label + features).
+  - Columns:
+    - `match` (binary ground truth: 1 = true match, 0 = non-match)
+    - `jac_total` (overall Jaccard similarity feature)
+    - `title_similarity` (title-level similarity feature)
+    - `content_similarity` (content/body-level similarity feature)
+    - `numbers_lenmatches ` (numeric overlap / number-match feature; note the trailing space in the column name)
+
+#### Baseline dataset (fixed lexical + overlap features, with pair IDs)
+- `final_basic_trainset_fixed.csv`
+  - Baseline candidate-pair dataset produced by the fixed legacy-style preprocessing pipeline.
+  - Each row represents one candidate link between two items (news article vs CBS report), including pair identifiers, the ground-truth label, and baseline overlap features.
+  - Columns:
+    - `child_id` (identifier for one side of the candidate pair)
+    - `parent_id` (identifier for the other side of the candidate pair)
+    - `match` (binary ground truth: 1 = true match, 0 = non-match)
+    - `word_jaccard_sim` (Jaccard similarity over word sets)
+    - `tax_overlap_count` (overlap count for taxonomy/category terms, if present in the text/metadata)
+    - `num_overlap_count` (overlap count of numbers found in both items)
+    - `common_word_count` (count of shared words between the two items)
+
+#### Hybrid semantic dataset (S-BERT + spaCy features, with pair IDs)
+- `final_hybrid_sbert_trainset_100pct.csv`
+  - Hybrid candidate-pair dataset produced by the semantic preprocessing pipeline.
+  - Each row represents one candidate link between two items (news article vs CBS report), including pair identifiers, the ground-truth label, and semantic + NLP overlap features.
+  - Columns:
+    - `child_id` (identifier for one side of the candidate pair)
+    - `parent_id` (identifier for the other side of the candidate pair)
+    - `match` (binary ground truth: 1 = true match, 0 = non-match)
+    - `sbert_sim` (Sentence-BERT embedding cosine similarity)
+    - `spacy_sim` (spaCy-based similarity feature)
+    - `tax_matches` (taxonomy/category match feature)
+    - `ner_overlap` (named-entity overlap feature)
+    - `num_matches` (numeric match feature)
+
+#### Topic assignment error export
+- `topic_error.csv`
+  - Small audit/export file used to inspect topic assignment quality for specific examples.
+  - Each row represents one inspected example with its assigned topic and the expected topic label.
+  - Columns:
+    - `status` (e.g., CORRECT / INCORRECT)
+    - `assigned_topic` (topic predicted/assigned by the system)
+    - `actual_topic` (reference/ground-truth topic)
+    - `text` (the underlying text snippet or record used for topic assignment)
+
 ### Preprocessing Pipelines
 * `preprocessing.py`: The **Hybrid** pipeline. Uses `SentenceTransformer` and `spaCy` to extract deep semantic features and NER overlaps.
 * `preprocessing_2.py`: The **Fixed Basic** pipeline. A mathematically corrected version of legacy logic using Jaccard Similarity and numerical overlap.
