@@ -26,7 +26,7 @@ The following results were obtained using an **80/20 Group-Aware Temporal Split*
 ### Key Audit Findings:
 * **Semantic Power**: The Hybrid dataset (S-BERT) achieved an **AUC of 0.9540**, proving that semantic embeddings effectively separate true matches from thematic noise.
 * **Overfitting Elimination**: While the legacy Baseline showed a massive **~33-49% Gap**, the Hybrid approach maintained a stable **~3.7% Gap**, indicating excellent generalization.
-* **Ranking Excellence**: With a **Success@1 of 0.9643** and **Success@5 of 1.0000**, the system ensures that the correct report is almost always the very first suggestion provided to an auditor.
+* **Ranking Excellence**: With **Success@1** - **Success@5** scores, showcasing the proof of concept for introducing semantic-clustering in the recommendations for manual reviewers.
 
 ## Methodology
 To ensure scientific validity, the evaluation suite implements:
