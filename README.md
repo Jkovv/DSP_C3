@@ -8,20 +8,7 @@ The primary goal was to address **semantic blindness** and **high overfitting** 
 ## Final Performance Matrix
 The following results were obtained using an **80/20 Group-Aware Temporal Split**, ensuring the model generalizes to entirely new news articles.
 
-| Dataset | Model | $Train\_Acc$ | $Test\_Acc$ | $Gap$ | $Recall$ | $AUC$ | $Succ@1$ | $Succ@2$ | $Succ@3$ | $Succ@4$ | $Succ@5$ |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **1. Baseline** | Balanced_RF | 1.0000 | 0.5100 | 0.4900 | 0.0414 | 0.4583 | 0.1667 | 0.6667 | 0.7500 | 0.8333 | 0.9167 |
-| | CatBoost | 0.8473 | 0.5100 | 0.3373 | 0.0345 | 0.4764 | 0.5833 | 0.7500 | 0.7500 | 0.8333 | 0.8333 |
-| | XGBoost | 0.9966 | 0.5033 | 0.4933 | 0.0276 | 0.4829 | 0.5000 | 0.7500 | 0.7500 | 0.8333 | 1.0000 |
-| | LightGBM | 0.9648 | 0.5167 | 0.4481 | 0.0414 | 0.4813 | 0.4167 | 0.5833 | 0.6667 | 0.9167 | 0.9167 |
-| **2. Basic** | Balanced_RF | 0.9994 | 0.0016 | 0.9978 | 1.0000 | 0.8077 | 0.8214 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
-| | CatBoost | 0.9907 | 0.9601 | 0.0306 | 0.5893 | 0.8662 | 0.8571 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
-| | XGBoost | 0.9923 | 0.9606 | 0.0318 | 0.6964 | 0.9139 | 0.9286 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
-| | LightGBM | 0.8531 | 0.8547 | -0.0016 | 0.7500 | 0.7632 | 0.7500 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
-| **3. Hybrid** | Balanced_RF | 1.0000 | 0.0016 | 0.9984 | 1.0000 | 0.8693 | 0.8929 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
-| | **CatBoost** | **0.9980** | **0.9609** | **0.0372** | **0.7679** | **0.9540** | **0.9643** | **1.0000** | **1.0000** | **1.0000** | **1.0000** |
-| | XGBoost | 0.9975 | 0.9608 | 0.0367 | 0.7500 | 0.9389 | 0.9821 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
-| | LightGBM | 0.8840 | 0.8827 | 0.0014 | 0.8036 | 0.8509 | 0.9107 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
+# TODO: FIX THE TABLE 
 
 ### Key Audit Findings:
 * **Semantic Power**: The Hybrid dataset (S-BERT) achieved an **AUC of 0.9540**, proving that semantic embeddings effectively separate true matches from thematic noise.
