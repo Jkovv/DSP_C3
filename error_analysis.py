@@ -3,7 +3,6 @@ import numpy as np
 import os
 import zipfile
 import re
-from sklearn.model_selection import GroupShuffleSplit
 from sklearn.preprocessing import MinMaxScaler
 from catboost import CatBoostClassifier
 
@@ -18,13 +17,11 @@ def resolve_cbs_theme(text, df_tax):
     for term, row in df_tax.iterrows():
         term_str = str(term).lower().strip()
         topic = str(row['TT']).strip()
-
         if len(term_str) > 3 and term_str in text_clean:
             scores[topic] = scores.get(topic, 0) + 1
-
+    
     valid_hits = {k: v for k, v in scores.items() if k not in ['999', '999.0', 'None', 'nan']}
     return max(valid_hits, key=valid_hits.get) if valid_hits else "999"
-
 
 def get_news_body(zip_ref, child_id):
     for f in zip_ref.namelist():
@@ -34,63 +31,60 @@ def get_news_body(zip_ref, child_id):
                 return " ".join(df.iloc[:, 1:].fillna("").astype(str).values.flatten()).strip()
     return ""
 
-def run_cbs_audit():
+def generate_example_csv():
+    if not os.path.exists(HYBRID_PATH):
+        print("Error"); return
+    
     df = pd.read_csv(HYBRID_PATH).fillna(0)
-    df_tax = pd.read_csv(TAX_PATH, index_col=0) # Index = Term
-    id_col = 'child_id'
-    gss = GroupShuffleSplit(n_splits=1, test_size=0.20, random_state=42)
-    train_idx, test_idx = next(gss.split(df, groups=df[id_col]))
-    train_df, test_df = df.iloc[train_idx].copy(), df.iloc[test_idx].copy()
-    features = [c for c in train_df.columns if c not in ['match', id_col, 'parent_id', 'probs', 'preds']]
+    df_tax = pd.read_csv(TAX_PATH, index_col=0)
+    
+    # 80/20 split
+    unique_ids = sorted(df['child_id'].unique())
+    split_idx = int(len(unique_ids) * 0.8)
+    train_ids, test_ids = unique_ids[:split_idx], unique_ids[split_idx:]
+    
+    train_df = df[df['child_id'].isin(train_ids)].copy()
+    test_df = df[df['child_id'].isin(test_ids)].copy()
+
+    features = [c for c in train_df.columns if c not in ['match', 'child_id', 'parent_id', 'probs', 'preds']]
     scaler = MinMaxScaler()
     X_train = scaler.fit_transform(train_df[features])
     X_test = scaler.transform(test_df[features])
+    
     model = CatBoostClassifier(iterations=100, scale_pos_weight=7.0, verbose=0, random_state=42)
     model.fit(X_train, train_df['match'])
+    
     test_df['probs'] = model.predict_proba(X_test)[:, 1]
+    test_df['preds'] = (test_df['probs'] > 0.5).astype(int)
 
-    rows = []
+    examples = []
     with zipfile.ZipFile(ZIP_PATH, 'r') as z:
         p_file = next((f for f in z.namelist() if f.endswith('all_parents.csv')), None)
         with z.open(p_file) as f:
             p_map = pd.read_csv(f).set_index('id')['content'].to_dict()
-        print(f"\n{'STATUS':<12} | {'ASSIGNED TOPIC (ALGO)':<25} | {'ACTUAL TOPIC (TRUTH)':<25} | {'SENTENCE'}")
 
-        # CORRECT
-        tp = test_df[test_df['match'] == 1].sort_values('probs', ascending=False).iloc[0]
-        tp_txt = get_news_body(z, int(tp[id_col]))
-        tp_topic = resolve_cbs_theme(tp_txt, df_tax)
-        
-        print(f"{'CORRECT':<12} | {tp_topic:<25} | {tp_topic:<25} | {tp_txt[:85]}...")
-        
-        rows.append({
-            "status": "CORRECT",
-            "assigned_topic": tp_topic,
-            "actual_topic": tp_topic,
-            "text": tp_txt
-        })
+        # CORRECT matches 
+        correct_matches = test_df[(test_df['match'] == 1) & (test_df['preds'] == 1)].head(10)
+        for _, row in correct_matches.iterrows():
+            txt = get_news_body(z, int(row['child_id']))
+            topic = resolve_cbs_theme(txt, df_tax)
+            examples.append({"assigned": topic, "actual": topic, "article": txt})
 
+        # INCORRECT matches
+        incorrect_matches = test_df[(test_df['match'] == 0) & (test_df['preds'] == 1)].sort_values('probs', ascending=False)
+        count = 0
+        for _, row in incorrect_matches.iterrows():
+            txt = get_news_body(z, int(row['child_id']))
+            actual_t = resolve_cbs_theme(txt, df_tax)
+            assigned_t = resolve_cbs_theme(p_map.get(row['parent_id'], ""), df_tax)
+            
+            if actual_t != assigned_t and count < 10:
+                examples.append({"assigned": assigned_t, "actual": actual_t, "article": txt})
+                count += 1
 
-        # INCORRECT  
-        fp_candidates = test_df[test_df['match'] == 0].sort_values('probs', ascending=False)
-        for _, row in fp_candidates.iterrows():
-            news_txt = get_news_body(z, int(row[id_col]))
-            actual_t = resolve_cbs_theme(news_txt, df_tax)
-            p_id = row.get('parent_id')
-            assigned_t = resolve_cbs_theme(p_map.get(p_id, ""), df_tax) if p_id in p_map else "999"
-            if assigned_t != actual_t:
-                print(f"{'INCORRECT':<12} | {assigned_t:<25} | {actual_t:<25} | {news_txt[:85]}...")
-                rows.append({
-                    "status": "INCORRECT",
-                    "assigned_topic": assigned_t,
-                    "actual_topic": actual_t,
-                    "text": news_txt
-                })
-                break
-    out_df = pd.DataFrame(rows)
-    out_df.to_csv("topic_error.csv", index=False)
-    print(f"\nSaved topic-level error analysis to topic_error.csv ({len(out_df)} rows)")
-
+    out_df = pd.DataFrame(examples)
+    out_df.to_csv("classification_examples.csv", index=False)
+    print("Succes: classification_examples.csv was generated.")
 
 if __name__ == "__main__":
-    run_cbs_audit()
+    generate_example_csv()
