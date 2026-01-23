@@ -71,8 +71,8 @@ To ensure scientific validity, the evaluation suite implements:
 
 1. **Clone the repository**:
    ```bash
-   git clone [https://github.com/Jkovv/dsp.git](https://github.com/Jkovv/dsp.git)
-   cd dsp
+   git clone https://github.com/Jkovv/DSP_C3.git
+   cd DSP_C3
 
 2.  **Install Dependencies**:
     ```bash
