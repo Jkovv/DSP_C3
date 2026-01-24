@@ -3,7 +3,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.model_selection import GroupShuffleSplit
 from sklearn.metrics import (accuracy_score, recall_score, f1_score, 
                              roc_auc_score, roc_curve, confusion_matrix)
@@ -15,7 +15,6 @@ def try_import(module_name):
 
 xgb = try_import("xgboost")
 cb = try_import("catboost")
-shap = try_import("shap")
 
 base_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(base_path)
@@ -28,6 +27,7 @@ DATASETS = {
 
 def calculate_success_k(test_df, score_col, k_values=[1, 2, 3, 4, 5], id_col='child_id'):
     temp_df = test_df.copy()
+    # a tiny random tie-breaker to ensure stable sorting
     temp_df[score_col] += np.random.uniform(0, 1e-10, size=len(temp_df))
     grouped = temp_df.groupby(id_col)
     total_queries, hits = 0, {k: 0 for k in k_values}
@@ -48,7 +48,7 @@ def run_master_evaluation():
 
     for d_name, d_path in DATASETS.items():
         if not os.path.exists(d_path):
-            print(f"skipped {d_name}: no such file.")
+            print(f"Skipped {d_name}: file {d_path} not found.")
             continue
             
         print(f"analysis: {d_name}")
@@ -60,12 +60,15 @@ def run_master_evaluation():
             df['child_id'] = np.arange(len(df)) // step
             id_col = 'child_id'
 
+        # stage 1: reserved 20% for testing
         gss_test = GroupShuffleSplit(n_splits=1, test_size=0.20, random_state=42)
         train_val_idx, test_idx = next(gss_test.split(df, groups=df[id_col]))
         df_train_val, df_test = df.iloc[train_val_idx], df.iloc[test_idx]
         
+        # stage 2: reserved 10% (12.5% of the 80%) for early stopping & calibration
         gss_val = GroupShuffleSplit(n_splits=1, test_size=0.125, random_state=42)
         train_idx, val_idx = next(gss_val.split(df_train_val, groups=df_train_val[id_col]))
+        
         train_df = df_train_val.iloc[train_idx].copy()
         test_df = df_test.copy()
         
@@ -76,12 +79,15 @@ def run_master_evaluation():
         X_test = scaler.transform(test_df[features])
         y_train, y_test = train_df['match'].values, test_df['match'].values
         
-        ratio = (y_train == 0).sum() / (y_train == 1).sum() if 1 in y_train else 10
+        # imbalance ratio for weighting (1:24 ratio)
+        ratio = (y_train == 0).sum() / (y_train == 1).sum() if 1 in y_train else 24.0
 
         models = {
+            "Original_RF": RandomForestClassifier(n_estimators=100, random_state=42),
             "Balanced_RF": RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42),
             "CatBoost": cb.CatBoostClassifier(iterations=200, scale_pos_weight=ratio, verbose=0, random_state=42) if cb else None,
-            "XGBoost": xgb.XGBClassifier(scale_pos_weight=ratio, random_state=42, eval_metric='logloss') if xgb else None
+            "XGBoost": xgb.XGBClassifier(scale_pos_weight=ratio, random_state=42, eval_metric='logloss') if xgb else None,
+            "AdaBoost": AdaBoostClassifier(n_estimators=100, random_state=42)
         }
 
         fig_roc, ax_roc = plt.subplots(figsize=(8, 6))
@@ -93,6 +99,7 @@ def run_master_evaluation():
             ts_probs = model.predict_proba(X_test)[:, 1]
             tr_probs = model.predict_proba(X_train)[:, 1]
             
+            # thresholding at the 96th percentile for the 1:24 ratio task
             threshold = np.quantile(ts_probs, 1 - (1/(ratio+1)))
             ts_preds = (ts_probs >= threshold).astype(int)
             test_df['probs'] = ts_probs
@@ -117,19 +124,28 @@ def run_master_evaluation():
             plt.figure(figsize=(4, 3))
             sns.heatmap(confusion_matrix(y_test, ts_preds), annot=True, fmt='d', cmap='Blues', cbar=False)
             plt.title(f"CM_{d_name[0]}_{m_name}")
-            plt.savefig(f"CM_{d_name[0]}_{m_name}.png", bbox_inches='tight'); plt.close()
+            plt.savefig(f"CM_{d_name[0]}_{m_name}.png", bbox_inches='tight')
+            plt.close()
 
-            # ROC curve
+            # ROC plot
             fpr, tpr, _ = roc_curve(y_test, ts_probs)
             ax_roc.plot(fpr, tpr, label=f"{m_name} (AUC={auc:.3f})")
 
-        ax_roc.plot([0, 1], [0, 1], 'k--', alpha=0.5); ax_roc.legend()
+        ax_roc.plot([0, 1], [0, 1], 'k--', alpha=0.5)
+        ax_roc.legend()
         ax_roc.set_title(f"ROC Curves - {d_name}")
-        fig_roc.savefig(f"ROC_{d_name[0]}.png", bbox_inches='tight'); plt.close(fig_roc)
+        fig_roc.savefig(f"ROC_{d_name[0]}.png", bbox_inches='tight')
+        plt.close(fig_roc)
 
     order = ["Dataset", "Model", "Tr_Acc", "Ts_Acc", "Gap", "F1", "AUC", "Recall", 
              "Succ@1", "Succ@2", "Succ@3", "Succ@4", "Succ@5"]
-    print(pd.DataFrame(all_metrics)[order].to_string(index=False))
+    final_results = pd.DataFrame(all_metrics)[order]
+    
+    mask = final_results['Dataset'].str.contains("Baseline")
+    cols_to_clear = ["Succ@2", "Succ@3", "Succ@4", "Succ@5"]
+    final_results.loc[mask, cols_to_clear] = "-"
+    
+    print(final_results.to_string(index=False))
 
 if __name__ == "__main__":
     run_master_evaluation()
