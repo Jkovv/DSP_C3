@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import time  
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
@@ -27,7 +28,6 @@ DATASETS = {
 
 def calculate_success_k(test_df, score_col, k_values=[1, 2, 3, 4, 5], id_col='child_id'):
     temp_df = test_df.copy()
-    # a tiny random tie-breaker to ensure stable sorting
     temp_df[score_col] += np.random.uniform(0, 1e-10, size=len(temp_df))
     grouped = temp_df.groupby(id_col)
     total_queries, hits = 0, {k: 0 for k in k_values}
@@ -60,12 +60,10 @@ def run_master_evaluation():
             df['child_id'] = np.arange(len(df)) // step
             id_col = 'child_id'
 
-        # stage 1: reserved 20% for testing
         gss_test = GroupShuffleSplit(n_splits=1, test_size=0.20, random_state=42)
         train_val_idx, test_idx = next(gss_test.split(df, groups=df[id_col]))
         df_train_val, df_test = df.iloc[train_val_idx], df.iloc[test_idx]
         
-        # stage 2: reserved 10% (12.5% of the 80%) for early stopping & calibration
         gss_val = GroupShuffleSplit(n_splits=1, test_size=0.125, random_state=42)
         train_idx, val_idx = next(gss_val.split(df_train_val, groups=df_train_val[id_col]))
         
@@ -79,7 +77,6 @@ def run_master_evaluation():
         X_test = scaler.transform(test_df[features])
         y_train, y_test = train_df['match'].values, test_df['match'].values
         
-        # imbalance ratio for weighting (1:24 ratio)
         ratio = (y_train == 0).sum() / (y_train == 1).sum() if 1 in y_train else 24.0
 
         models = {
@@ -94,17 +91,21 @@ def run_master_evaluation():
 
         for m_name, model in models.items():
             if model is None: continue
+            
+            start_time = time.time()
+            
             model.fit(X_train, y_train)
             
             ts_probs = model.predict_proba(X_test)[:, 1]
             tr_probs = model.predict_proba(X_train)[:, 1]
             
-            # thresholding at the 96th percentile for the 1:24 ratio task
+            end_time = time.time()
+            execution_time = end_time - start_time
+            
             threshold = np.quantile(ts_probs, 1 - (1/(ratio+1)))
             ts_preds = (ts_probs >= threshold).astype(int)
             test_df['probs'] = ts_probs
             
-            # metrics
             tr_acc = accuracy_score(y_train, (tr_probs >= 0.5).astype(int))
             ts_acc = accuracy_score(y_test, ts_preds)
             auc = roc_auc_score(y_test, ts_probs)
@@ -115,19 +116,18 @@ def run_master_evaluation():
             res = {
                 "Dataset": d_name, "Model": m_name, 
                 "Tr_Acc": f"{tr_acc:.3f}", "Ts_Acc": f"{ts_acc:.3f}", "Gap": f"{(tr_acc-ts_acc):.3f}",
-                "F1": f"{f1:.3f}", "AUC": f"{auc:.3f}", "Recall": f"{rec:.3f}"
+                "F1": f"{f1:.3f}", "AUC": f"{auc:.3f}", "Recall": f"{rec:.3f}",
+                "Time(s)": f"{execution_time:.2f}"  
             }
             res.update({k: f"{v:.3f}" for k, v in succ.items()})
             all_metrics.append(res)
 
-            # confusion matrix 
+            # confusion matrix and ROC plots
             plt.figure(figsize=(4, 3))
             sns.heatmap(confusion_matrix(y_test, ts_preds), annot=True, fmt='d', cmap='Blues', cbar=False)
             plt.title(f"CM_{d_name[0]}_{m_name}")
             plt.savefig(f"CM_{d_name[0]}_{m_name}.png", bbox_inches='tight')
             plt.close()
-
-            # ROC plot
             fpr, tpr, _ = roc_curve(y_test, ts_probs)
             ax_roc.plot(fpr, tpr, label=f"{m_name} (AUC={auc:.3f})")
 
@@ -138,13 +138,13 @@ def run_master_evaluation():
         plt.close(fig_roc)
 
     order = ["Dataset", "Model", "Tr_Acc", "Ts_Acc", "Gap", "F1", "AUC", "Recall", 
-             "Succ@1", "Succ@2", "Succ@3", "Succ@4", "Succ@5"]
+             "Succ@1", "Succ@5", "Time(s)"]
     final_results = pd.DataFrame(all_metrics)[order]
     
     mask = final_results['Dataset'].str.contains("Baseline")
-    cols_to_clear = ["Succ@2", "Succ@3", "Succ@4", "Succ@5"]
-    final_results.loc[mask, cols_to_clear] = "-"
+    final_results.loc[mask, "Succ@5"] = "-"
     
+    print("\n--- FINAL PERFORMANCE AUDIT WITH TIMING ---")
     print(final_results.to_string(index=False))
 
 if __name__ == "__main__":
