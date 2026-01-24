@@ -93,7 +93,6 @@ def run_master_evaluation():
             if model is None: continue
             
             start_time = time.time()
-            
             model.fit(X_train, y_train)
             
             ts_probs = model.predict_proba(X_test)[:, 1]
@@ -122,7 +121,6 @@ def run_master_evaluation():
             res.update({k: f"{v:.3f}" for k, v in succ.items()})
             all_metrics.append(res)
 
-            # confusion matrix and ROC plots
             plt.figure(figsize=(4, 3))
             sns.heatmap(confusion_matrix(y_test, ts_preds), annot=True, fmt='d', cmap='Blues', cbar=False)
             plt.title(f"CM_{d_name[0]}_{m_name}")
@@ -138,13 +136,13 @@ def run_master_evaluation():
         plt.close(fig_roc)
 
     order = ["Dataset", "Model", "Tr_Acc", "Ts_Acc", "Gap", "F1", "AUC", "Recall", 
-             "Succ@1", "Succ@5", "Time(s)"]
+             "Succ@1", "Succ@2", "Succ@3", "Succ@4", "Succ@5", "Time(s)"]
     final_results = pd.DataFrame(all_metrics)[order]
     
     mask = final_results['Dataset'].str.contains("Baseline")
-    final_results.loc[mask, "Succ@5"] = "-"
+    cols_to_mask = ["Succ@2", "Succ@3", "Succ@4", "Succ@5"]
+    final_results.loc[mask, cols_to_mask] = "-"
     
-    print("\n--- FINAL PERFORMANCE AUDIT WITH TIMING ---")
     print(final_results.to_string(index=False))
 
 if __name__ == "__main__":
