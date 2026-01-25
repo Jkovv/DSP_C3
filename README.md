@@ -44,7 +44,7 @@ Below are representative examples from the audit, showing how the Hybrid model i
 | **CORRECT** | Government & Politics | Government & Politics | "In 2021, nearly 69,000 new-build homes were completed... the housing stock grew by 0.9% to over 8 million homes." |
 | **ERROR** | Health & Welfare | Government & Politics | "In 2021, nearly 171,000 people died, 16,000 more than expected... excess mortality was higher in the 50-80 age groups." |
 
-**Audit Note:** *Errors* often occur due to "Label Ambiguity"—the model logically links death statistics to *Health*, while the CBS ground truth categorizes them under *Government/Politics*.
+**Audit Note:** *Errors* often occur due to "Label Ambiguity"-the model logically links death statistics to *Health*, while the CBS ground truth categorizes them under *Government/Politics*.
 
 ---
 
