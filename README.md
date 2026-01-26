@@ -123,5 +123,22 @@ To ensure scientific validity, the evaluation suite implements:
 ---
 
 ## Project Overview - Dashboard Improvement
+(short intro.)
 
-(to be editted)
+---
+
+## Userflow for the new dashboard (it's on figma alr)
+(incl. the flow and short explanations)
+
+---
+
+## UAT (User Testing)
+(incl. methodolody)
+
+---
+
+## Results - Dashboard Improvement
+(1. the instruction of how to use the sample code for frontend dashboard dev;
+ 2. result from user testing.)
+
+(... to be edited)
