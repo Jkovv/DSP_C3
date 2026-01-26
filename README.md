@@ -4,7 +4,7 @@ This repository contains the source code, data pipelines, and performance audits
 
 ---
 
-## Project Overview
+## Project Overview - Algorithm Improvement
 The primary goal was to address **semantic blindness** and **high overfitting** observed in legacy linkage systems. By implementing Transformer-based embeddings (S-BERT) and Named Entity Recognition (NER), we evolved the system into a high-precision ranking engine capable of understanding the context of Dutch news.
 
 ---
@@ -121,3 +121,7 @@ To ensure scientific validity, the evaluation suite implements:
     ```
 
 ---
+
+## Project Overview - Dashboard Improvement
+
+(to be editted)
