@@ -10,7 +10,7 @@ The primary goal was to address **semantic blindness** and **high overfitting** 
 ---
 
 ## Final Performance Matrix
-The following results were obtained using an **80/20 Group-Aware Temporal Split**, ensuring the model generalizes to entirely new news articles.
+The following results were obtained using an **80/20 Group-Aware Split**, ensuring the model generalizes to entirely new news articles.
 
 | Dataset | Model | Tr_Acc | Ts_Acc | Gap | F1 | AUC | Recall | Succ@1 | Succ@2 | Succ@3 | Succ@4 | Succ@5 | Time(s) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
