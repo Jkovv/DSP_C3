@@ -63,7 +63,7 @@ To validate the **Topic Overwriting** strategy, we audited the "Semantic Neighbo
 
 
 **Technical Validation:**
-Despite different human labels (Agriculture vs. Population), the underlying semantic features are near-identical in specific events. The high **Cosine Similarity (0.978)** proves the model creates dense clusters of meaning. This provides the statistical safety required to propagate manual topic corrections across related article clusters, significantly reducing manual auditor overhead.
+Despite different human labels (Agriculture vs. Population), the underlying semantic features are near-identical in specific events. The high **Cosine Similarity (0.978)** proves the model creates dense clusters of meaning. This provides the statistical safety required to propagate manual topic corrections across related article clusters, significantly reducing manual auditor overhead. Even though in some cases, including the one above, the labels are different, the feature is valid for reducing the search space for CBS workers.
 
 ---
 
