@@ -11,6 +11,7 @@ TAX_PATH = 'taxonomie_df.csv'
 ZIP_PATH = 'data.zip'
 
 def resolve_cbs_theme(text, df_tax):
+    # counts taxonomy term hits and returns the most frequent topic code
     if not isinstance(text, str) or len(text) < 10: return "999"
     text_clean = text.lower()
     scores = {}
