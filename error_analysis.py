@@ -62,7 +62,7 @@ def generate_example_csv():
         with z.open(p_file) as f:
             p_map = pd.read_csv(f).set_index('id')['content'].to_dict()
 
-        # true positives
+        # true positives: top 10 highest-confidence correct predictions to sanity-check
         correct_matches = test_df[(test_df['match'] == 1) & (test_df['preds'] == 1)].sort_values('probs', ascending=False).head(10)
         for _, row in correct_matches.iterrows():
             fname = f"c_{int(row['child_id'])}.csv"
