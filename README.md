@@ -57,8 +57,8 @@ To validate the **Topic Overwriting** strategy, we audited the "Semantic Neighbo
 
 | Role | Similarity | Category | Article Snippet |
 | :--- | :--- | :--- | :--- |
-| **SEED** (Correct) | 1.000 | Agriculture & Fisheries | "Nitrogen excretion falls, phosphate rises in 2022... uitscheiding van fosfaat door melkvee gaat in 2022 omhoog..." |
-| **NEIGHBOR** | **0.978** | Population | "10% more people died than expected in 2021... in 2021 overleden bijna 171 duizend mensen..." |
+| **SEED** (Correct) | 1.000 | Agriculture & Fisheries | "Phosphate and nitrogen excretion below production ceilings. CBS published the first 2022 quarterly report on livestock excretion..." |
+| **NEIGHBOR** | **0.978** | Population | "10 percent more people died than expected in 2021. Nearly 171,000 deaths were reported, 16,000 more than expected..." |
 
 
 
