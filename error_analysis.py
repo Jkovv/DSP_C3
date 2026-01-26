@@ -12,7 +12,9 @@ ZIP_PATH = 'data.zip'
 
 def resolve_cbs_theme(text, df_tax):
     if not isinstance(text, str) or len(text) < 10: return "999"
+    
     text_clean = text.lower()
+    
     scores = {}
     for term, row in df_tax.iterrows():
         term_str = str(term).lower().strip()
