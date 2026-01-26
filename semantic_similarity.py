@@ -11,7 +11,8 @@ TAX_PATH = 'taxonomie_df.csv'
 ZIP_PATH = 'data.zip'
 
 def resolve_cbs_theme(text, df_tax):
-    if not isinstance(text, str) or len(text) < 10: return "999"
+    """Identifies category based on taxonomy hits. Returns 'Unknown' if no hits."""
+    if not isinstance(text, str) or len(text) < 10: return "Unknown"
     text_clean = text.lower()
     scores = {}
     for term, row in df_tax.iterrows():
@@ -19,31 +20,35 @@ def resolve_cbs_theme(text, df_tax):
         topic = str(row['TT']).strip()
         if len(term_str) > 3 and term_str in text_clean:
             scores[topic] = scores.get(topic, 0) + 1
-    valid_hits = {k: v for k, v in scores.items() if k not in ['999', 'nan']}
-    return max(valid_hits, key=valid_hits.get) if valid_hits else "999"
+    
+    valid_hits = {k: v for k, v in scores.items() if k not in ['999', 'nan', 'Unknown']}
+    return max(valid_hits, key=valid_hits.get) if valid_hits else "Ambiguous"
 
 def generate_semantic_pairs():
-    df = pd.read_csv(HYBRID_PATH).fillna(0) 
-    df_tax = pd.read_csv(TAX_PATH, index_col=0) 
+    df = pd.read_csv(HYBRID_PATH).fillna(0)
+    df_tax = pd.read_csv(TAX_PATH, index_col=0)
     
-    # 80/20 
     unique_ids = sorted(df['child_id'].unique())
-    test_ids = unique_ids[int(len(unique_ids) * 0.8):]
+    test_split_idx = int(len(unique_ids) * 0.8)
+    test_ids = unique_ids[test_split_idx:]
+    
     train_df = df[~df['child_id'].isin(test_ids)].copy()
-    test_df = df[df['child_id'].isin(test_ids)].copy()
+    test_df = df[df['child_id'].isin(test_ids)].copy().reset_index(drop=True)
 
+    # feature eng 
     features = [c for c in train_df.columns if c not in ['match', 'child_id', 'parent_id']]
     scaler = MinMaxScaler()
     X_train = scaler.fit_transform(train_df[features])
     X_test = scaler.transform(test_df[features])
     
+    # train catboost
     model = CatBoostClassifier(iterations=200, scale_pos_weight=24.0, verbose=0, random_state=42)
     model.fit(X_train, train_df['match'])
     
-    test_df['probs'] = model.predict_proba(X_test)[:, 1] 
+    # conf weighting
+    test_df['probs'] = model.predict_proba(X_test)[:, 1]
     
-    # high-confidence seeds
-    seeds = test_df[(test_df['match'] == 1) & (test_df['probs'] > 0.8)].head(5)
+    seeds = test_df[(test_df['match'] == 1) & (test_df['probs'] > 0.85)].head(10)
     
     output_rows = []
     with zipfile.ZipFile(ZIP_PATH, 'r') as z:
@@ -51,6 +56,7 @@ def generate_semantic_pairs():
         
         for idx, seed_row in seeds.iterrows():
             seed_id = int(seed_row['child_id'])
+            
             seed_txt = ""
             if f"c_{seed_id}.csv" in zip_files:
                 with z.open(zip_files[f"c_{seed_id}.csv"]) as f:
@@ -58,19 +64,19 @@ def generate_semantic_pairs():
             
             seed_topic = resolve_cbs_theme(seed_txt, df_tax)
             
-            # confidence-weighted sim
-            seed_vec = X_test[test_df.index.get_loc(idx)].reshape(1, -1)
+            seed_vec = X_test[idx].reshape(1, -1)
             raw_similarities = cosine_similarity(seed_vec, X_test).flatten()
             
-            # multiplying similarity by model probability to penalize stylistic noise
-            weighted_scores = raw_similarities * test_df['probs'].values
+            # WEIGHTED SCORE: Sim * (Model Confidence) 
+            weighted_scores = raw_similarities * (test_df['probs'].values + 0.05)
             
-            # mask the self-match
-            weighted_scores[test_df.index.get_loc(idx)] = -1
+            # mask self
+            weighted_scores[idx] = -1
             
-            neighbor_idx_local = np.argmax(weighted_scores)
-            neighbor_row = test_df.iloc[neighbor_idx_local]
-            neighbor_sim = raw_similarities[neighbor_idx_local] #  raw sim for reporting
+            # best Neighbor
+            neighbor_idx = np.argmax(weighted_scores)
+            neighbor_row = test_df.iloc[neighbor_idx]
+            neighbor_sim = raw_similarities[neighbor_idx] 
 
             neighbor_id = int(neighbor_row['child_id'])
             neighbor_txt = ""
@@ -91,7 +97,7 @@ def generate_semantic_pairs():
             output_rows.append({"Pair_ID": "", "Role": "---", "Similarity": "", "Category": "", "Text": ""})
 
     pd.DataFrame(output_rows).to_csv("semantic_similarity_fixed.csv", index=False)
-    print("Success: semantic_similarity_fixed.csv generated with weighted selection.")
+    print(f"Success: Generated pairs for {len(seeds)} seeds in semantic_similarity_fixed.csv")
 
 if __name__ == "__main__":
     generate_semantic_pairs()
