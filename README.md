@@ -53,17 +53,38 @@ Below are representative examples from the audit, showing how the Hybrid model i
 ---
 
 ## Semantic Similarity Proof
-To validate the **Topic Overwriting** strategy, we audited the "Semantic Neighborhood" of correctly linked articles. This demonstrates that articles within the same semantic cluster share identical or highly related topics, justifying the propagation of manual corrections.
 
-| Role | Similarity | Category | Article Snippet |
-| :--- | :--- | :--- | :--- |
-| **SEED** (Correct) | 1.000 | Agriculture & Fisheries | "Phosphate and nitrogen excretion below production ceilings. CBS published the first 2022 quarterly report on livestock excretion..." |
-| **NEIGHBOR** | **0.978** | Population | "10 percent more people died than expected in 2021. Nearly 171,000 deaths were reported, 16,000 more than expected..." |
+This audit examines the **Semantic Neighborhood** of news articles within the S-BERT vector space. By comparing a **Seed** (human-validated correct link) to its closest **Neighbor**, we can visualize where the model’s mathematical logic aligns or clashes with human judgment.
+
+### Audit Examples: Match vs. Label Divergence
+
+| Pair ID | Result | Sim. | Category | Article Text (Excerpt) |
+| :--- | :--- | :--- | :--- | :--- |
+| **1037677** | **MATCH** | **0.990** | Agriculture & Fisheries | "Nitrogen excretion falls, phosphate rises in 2022. News Dairy cattle hour: The excretion of phosphate by dairy cattle will increase in 2022 due to higher phosphate content in grass." |
+| **1037677** | **NEIGHBOR** | **0.990** | Agriculture & Fisheries | "Agricultural nitrogen surplus increased, majority ended up in soil. Quote: The nitrogen surplus in the agricultural sector rose in 2020 to 307 million kilograms." |
+| **958761** | **CLASH** | **0.983** | Health vs. Population | "In 2021, 16,000 more people died than expected. In 2021, nearly 171,000 people died. That is 16,000 (10 percent) more than expected for this year." |
+| **958761** | **NEIGHBOR** | **0.983** | Population | "10 percent more people died than expected in 2021. In 2021, nearly 171,000 people died, 16,000 (10 percent) more than expected for this year." |
+
+---
+
+### Understanding the Context
+
+* **The Success Case (Pair 1037677)**: This represents a win for the semantic approach. The articles share specific vocabulary regarding "nitrogen" and "phosphate," and the model correctly clusters them under the same category. This confirms the system can identify thematic consistency even across different reporting years.
+* **The Ambiguity Case (Pair 958761)**: These two articles describe the exact same 2021 mortality statistics, even using identical phrasing like "16,000 more than expected". The "Clash" in labels is purely bureaucratic because one was filed under "Care & Health" and the other under "Population". This highlights how the model's high similarity score actually finds "Event Twins" that human verifiers have labeled inconsistently.
 
 
 
-**Technical Validation:**
-Despite different human labels (Agriculture vs. Population), the underlying semantic features are near-identical in specific events. The high **Cosine Similarity (0.978)** proves the model creates dense clusters of meaning. This provides the statistical safety required to propagate manual topic corrections across related article clusters, significantly reducing manual auditor overhead. Even though in some cases, including the one above, the labels are different, the feature is valid for reducing the search space for CBS workers.
+### The Need for Further Exploration
+
+It is valid to be skeptical when a model claims two different topics are **98% similar**. This often suggests overfitting or institutional bias. However, the audit indicates the reality is more complex for several reasons:
+
+* **The Boilerplate Bias**: Standardized CBS phrasing like "Statistics Netherlands reports on the basis of preliminary figures" creates a massive "gravitational pull" in the vector space. We need to determine if the model is actually understanding the news or just recognizing the institutional style of the text.
+* **Human Label Inconsistency**: As seen in Pair **958761**, the texts are nearly identical, but human verifiers filed them under different departments. In these cases, the model's "error" actually exposes a lack of synchronization in the manual linkage process.
+* **Overfitting vs. Generalization**: The Hybrid model maintains a remarkably small **0.4% Gap** between training and test accuracy. While this suggests stability, we must ensure the model is not simply memorizing the 1:24 imbalance structure rather than performing true semantic reasoning.
+
+
+
+> **Audit Summary**: We should not blindly trust the model labels yet, as the model may be overfitting or biased by institutional language. However, the 92.7% **Success@5** rate proves the model finds the right report even when the bureaucratic topic labels are inconsistent.
 
 ---
 
