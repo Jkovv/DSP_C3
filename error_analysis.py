@@ -20,6 +20,7 @@ def resolve_cbs_theme(text, df_tax):
     for term, row in df_tax.iterrows():
         term_str = str(term).lower().strip()
         topic = str(row['TT']).strip()
+        # ignore extremely short terms to reduce noise
         if len(term_str) > 3 and term_str in text_clean:
             scores[topic] = scores.get(topic, 0) + 1
     
