@@ -23,10 +23,10 @@ def resolve_cbs_theme(text, df_tax):
     return max(valid_hits, key=valid_hits.get) if valid_hits else "999"
 
 def generate_semantic_pairs():
-    df = pd.read_csv(HYBRID_PATH).fillna(0)
-    df_tax = pd.read_csv(TAX_PATH, index_col=0)
+    df = pd.read_csv(HYBRID_PATH).fillna(0) 
+    df_tax = pd.read_csv(TAX_PATH, index_col=0) 
     
-    # 80/20 split
+    # 80/20 
     unique_ids = sorted(df['child_id'].unique())
     test_ids = unique_ids[int(len(unique_ids) * 0.8):]
     train_df = df[~df['child_id'].isin(test_ids)].copy()
@@ -40,8 +40,9 @@ def generate_semantic_pairs():
     model = CatBoostClassifier(iterations=200, scale_pos_weight=24.0, verbose=0, random_state=42)
     model.fit(X_train, train_df['match'])
     
-    test_df['probs'] = model.predict_proba(X_test)[:, 1]
+    test_df['probs'] = model.predict_proba(X_test)[:, 1] 
     
+    # high-confidence seeds
     seeds = test_df[(test_df['match'] == 1) & (test_df['probs'] > 0.8)].head(5)
     
     output_rows = []
@@ -57,15 +58,20 @@ def generate_semantic_pairs():
             
             seed_topic = resolve_cbs_theme(seed_txt, df_tax)
             
-            # cosine similarity with other test samples
+            # confidence-weighted sim
             seed_vec = X_test[test_df.index.get_loc(idx)].reshape(1, -1)
-            similarities = cosine_similarity(seed_vec, X_test).flatten()
+            raw_similarities = cosine_similarity(seed_vec, X_test).flatten()
             
-            similarities[test_df.index.get_loc(idx)] = -1
-            neighbor_idx_local = np.argmax(similarities)
+            # multiplying similarity by model probability to penalize stylistic noise
+            weighted_scores = raw_similarities * test_df['probs'].values
+            
+            # mask the self-match
+            weighted_scores[test_df.index.get_loc(idx)] = -1
+            
+            neighbor_idx_local = np.argmax(weighted_scores)
             neighbor_row = test_df.iloc[neighbor_idx_local]
-            neighbor_sim = similarities[neighbor_idx_local]
-            
+            neighbor_sim = raw_similarities[neighbor_idx_local] #  raw sim for reporting
+
             neighbor_id = int(neighbor_row['child_id'])
             neighbor_txt = ""
             if f"c_{neighbor_id}.csv" in zip_files:
@@ -84,8 +90,8 @@ def generate_semantic_pairs():
             })
             output_rows.append({"Pair_ID": "", "Role": "---", "Similarity": "", "Category": "", "Text": ""})
 
-    pd.DataFrame(output_rows).to_csv("semantic_similarity_proof.csv", index=False)
-    print("Success: semantic_similarity_proof.csv generated.")
+    pd.DataFrame(output_rows).to_csv("semantic_similarity_fixed.csv", index=False)
+    print("Success: semantic_similarity_fixed.csv generated with weighted selection.")
 
 if __name__ == "__main__":
     generate_semantic_pairs()
