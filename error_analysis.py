@@ -67,7 +67,7 @@ def generate_example_csv():
                 topic = resolve_cbs_theme(txt, df_tax)
                 examples.append({"type": "CORRECT", "assigned": topic, "actual": topic, "article": txt[:500] + "..."})
 
-        # false pos
+        # false positives
         incorrect_matches = test_df[(test_df['match'] == 0) & (test_df['preds'] == 1)].sort_values('probs', ascending=False)
         
         added = 0
