@@ -11,7 +11,7 @@ TAX_PATH = 'taxonomie_df.csv'
 ZIP_PATH = 'data.zip'
 
 def resolve_cbs_theme(text, df_tax):
-    "Heuristically resolves a CBS theme code by counting taxonomy term occurrences within the text"
+    """Heuristically resolves a CBS theme code by counting taxonomy term occurrences within the text"""
     if not isinstance(text, str) or len(text) < 10: return "999"
     # normalize casing so term matching is case-insensitive
     text_clean = text.lower()

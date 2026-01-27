@@ -27,7 +27,7 @@ DATASETS = {
 }
 
 def calculate_success_k(test_df, score_col, k_values=[1, 2, 3, 4, 5], id_col='child_id'):
-    "Calculates Success@k metrics (the percentage of queries where a relevant item appears in the top k results)."
+    """Calculates Success@k metrics (the percentage of queries where a relevant item appears in the top k results)."""
     temp_df = test_df.copy()
     temp_df[score_col] += np.random.uniform(0, 1e-10, size=len(temp_df)) #introduce a mbit mof random noise
     grouped = temp_df.groupby(id_col)

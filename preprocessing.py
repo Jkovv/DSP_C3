@@ -26,6 +26,7 @@ model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
 if torch.cuda.is_available(): model = model.to('cuda')
 
 def nltk_clean_text(text):
+    """Standardizes and tokenizes Dutch text using NLTK."""
     if not isinstance(text, str) or pd.isna(text): return set()
     text = re.sub(r'[^\w\s]', ' ', text.lower())
     tokens = word_tokenize(text)
