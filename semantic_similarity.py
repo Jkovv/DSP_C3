@@ -25,6 +25,7 @@ def resolve_cbs_theme(text, df_tax):
     return max(valid_hits, key=valid_hits.get) if valid_hits else "Ambiguous"
 
 def generate_semantic_pairs():
+    """Generates semantic pairs to qualitatively analyze model performance"""
     df = pd.read_csv(HYBRID_PATH).fillna(0)
     df_tax = pd.read_csv(TAX_PATH, index_col=0)
     
