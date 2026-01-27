@@ -36,12 +36,13 @@ def nltk_clean_text(text):
 
 
 def extract_numbers_complex(text):
+    """Extracts numeric values from text, handling both digits and written-out Dutch number words."""
     if not isinstance(text, str) or pd.isna(text): return set()
     pattern = r"\b(nul)\b|\b([a-zA-Z]*(twin|der|veer|vijf|zes|zeven|acht|negen)tig|[a-zA-Z]*tien|twee|drie|vier|vijf|zes|zeven|acht|negen|elf|twaalf)( )?(honderd|duizend|miljoen|miljard|procent)?\b|\b(honderd|duizend|miljoen|miljard)\b|\b[-+]?[.|,]?[\d]+(?:,\d\d\d)*[\.|,]?\d*([.|,]\d+)*(?:[eE][-+]?\d+)?( )?(honderd|duizend|miljoen|miljard|procent|%)?|half (miljoen|miljard|procent)"
     matches = re.finditer(pattern, text, re.IGNORECASE)
     return set([m.group().strip().lower().replace('%', ' procent').replace(',', '.') for m in matches])
 
-def run_hybrid_preprocessing():
+def run_hybrid_preprocessing(): #run preprocessing pipeline
     with zipfile.ZipFile(ZIP_PATH, 'r') as z:
         print("1/4 Processing Taxonomy...")
         tax_df = pd.read_csv(TAXONOMY_PATH)
