@@ -127,8 +127,29 @@ To ensure scientific validity, the evaluation suite implements:
 
 ---
 
-## Userflow for the new dashboard (it's on figma alr)
-(incl. the flow and short explanations)
+## High-level Technical Userflow
+
+Dashboard
+   ↓
+Article Selection (single or bulk)
+   ↓
+Verification Page ⇄ Article Detail Modals
+   ↓
+Verification Decision
+        ↓
+[Confirm | Reclassify | Defer | Close]
+        ↓
+Check for Similar Articles
+      ↙          ↘
+Similar Found   None Found
+     ↓              ↓
+Bulk Action     Single Update
+     ↓              ↓
+Update Database
+        ↓
+Update Metrics & Counters
+        ↓
+Return to Dashboard
 
 ---
 
