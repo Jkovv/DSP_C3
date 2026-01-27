@@ -128,7 +128,8 @@ To ensure scientific validity, the evaluation suite implements:
 ---
 
 ## High-level Technical Userflow
-
+This is the high-level technical flow of the CBS Matching Platform, illustrating the end-to-end validation process from dashboard selection through verification, optional bulk reclassification, database updates, and return to the dashboard.
+```
 Dashboard
    ↓
 Article Selection (single or bulk)
@@ -137,7 +138,7 @@ Verification Page ⇄ Article Detail Modals
    ↓
 Verification Decision
         ↓
-[Confirm | Reclassify | Defer | Close]
+[ Confirm | Reclassify | Defer | Close ]
         ↓
 Check for Similar Articles
       ↙          ↘
@@ -150,6 +151,7 @@ Update Database
 Update Metrics & Counters
         ↓
 Return to Dashboard
+```
 
 ---
 
