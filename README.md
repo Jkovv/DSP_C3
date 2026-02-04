@@ -179,13 +179,13 @@ Task completion time and task success were recorded for each task.
 
 ### Task Performance Comparison
 
-The table below shows the results for Part 2 (workflow tasks) in both systems.
+The table below shows the results for Part 2 (workflow tasks) in both systems, with task time presented in seconds.
 
 | Task | Description | Current System Success | Current System Time | Prototype Success | Prototype Time |
 |------|------------|----------------------|--------------------|------------------|---------------|
-| 1 | Search CBS article and open page | Yes | 0:07 | Yes | 0:45 |
-| 2 | Filter media articles | – | – | Yes | 0:10 |
-| 3 | Match three media articles | Yes | 0:21 | Yes | 1:50 |
+| 1 | Search CBS article and open page | Yes | 7 | Yes | 45 |
+| 2 | Filter media articles | – | – | Yes | 10 |
+| 3 | Match three media articles | Yes | 21 | Yes | 110 |
 | 4 | Open CBS article and citing media article | – | – | – | – |
 
 ---
@@ -249,8 +249,127 @@ While some layout and interaction refinements are needed, the results suggest th
 
 ---
 
-## Results - Dashboard Improvement
-(1. the instruction of how to use the sample code for frontend dashboard dev;
- 2. result from user testing.)
+## Results – Dashboard Improvement
 
-(... to be edited)
+This section presents (1) instructions for using the provided sample frontend code for dashboard development and (2) the main features of the final dashboard iteration after incorporating feedback from the user evaluation session. The dasboard prototype can be interacted with through its [Figma Site](https://bear-thumb-72325869.figma.site/) and a walkthrough of it can be watched [here](https://youtu.be/JFvyypkzkgs)
+
+### Using the Prototype Frontend Code
+
+The repository includes sample frontend code to demonstrate the structure and interaction logic of the developed dashboard prototype. This code serves as a reference implementation for further development and experimentation.
+
+To use the sample code:
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Jkovv/DSP_C3.git
+   cd DSP_C3
+   ```
+
+2.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
+
+3.  **Run the development server:**:
+    ```bash
+    npm start
+    ```
+
+    ## Dashboard Prototype Setup and Usage
+
+The interactive dashboard prototype is built with **TypeScript and React**. It serves as a functional front-end concept for the redesigned CBS Matching Platform, focusing on visualising validation workflows and usability improvements. 
+
+### Technical Environment
+
+To replicate or run the prototype, a standard **React development environment** is required.
+
+### Reconstruction Steps
+
+The dashboard environment can be reconstructed by extracting the following archives into your React project and using the `App.tsx` entry point:
+
+1. **App.tsx**: The main application entry point that orchestrates layout, routing logic, and state management.
+2. **components.zip**: Contains all React components used in the interface, including TypeScript definitions for type safety.
+3. **data.zip**: Includes sample datasets representing the structure of CBS articles and media articles, allowing for functional testing without requiring access to classified company data.
+4. **styles.zip**: Contains all styling assets, including Tailwind CSS configurations and the global CSS file implementing CBS corporate styling.
+
+To use the sample code:
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Jkovv/DSP_C3.git
+   cd DSP_C3
+   ```
+
+2. **Extract Prototype Assets**:
+   ```bash
+    unzip components.zip -d src/components
+    unzip data.zip -d src/data
+    unzip styles.zip -d src/styles
+   ```
+   Note: Ensure the target directories (src/components, etc.)     match your specific React project structure.
+   
+4. **Install Dependencies**:
+    ```bash
+    npm install
+    ```
+
+5.  **Run the development server:**:
+    ```bash
+    npm start
+    ```
+
+
+## Final Dashboard Features (After Usability Feedback)
+
+After processing feedback from the user evaluation session, the dashboard prototype was refined into a more workflow-focused and user-centered interface. The main improvements and features include:
+
+---
+
+### Improved User Flow and Interaction Design
+* **Smoother Navigation:** More intuitive layout designed to reduce cognitive load.
+* **CBS Corporate Identity:** Use of official internal CBS house-style for increased familiarity and trust.
+
+### Bulk Verification for High-Confidence Matches
+* **One-Click Verification:** Designed for matches with confidence scores between **85–99%**.
+* **Default Selection:** All related media articles are selected by default to speed up batch processing.
+* **Hover Snippets:** Quick content previews available on hover to minimize page transitions.
+
+### Minimalist and Structured Search
+* **Dual Search Toggle:** Easily switch between CBS articles and media articles.
+* **Breadcrumb Navigation:** Enhanced location awareness within the application hierarchy.
+* **Advanced Filtering:** Granular options for structured searching across various metadata.
+
+### Compact Article Pages
+* **Decision-Focused UI:** Only essential information is displayed to streamline matching decisions.
+* **Hierarchical View:** Parent (CBS) articles are pinned at the top of child articles.
+* **Citation Lists:** Parent articles list all currently citing or matched children.
+* **Direct Access:** Directly clickable source links for immediate external verification.
+
+### Clear Metrics and Task Overview
+* **Centralized Dashboard:** Real-time counters for processed, pending, and flagged items.
+* **To-Do List Structure:** Organized categories based on matching priority and status.
+
+### Manual Validation for Low-Confidence Matches
+* **Focused Review:** Dedicated overview for matches with confidence scores **below 85%**.
+* **Structured Interface:** Built specifically for careful, manual review of edge cases.
+
+### Transparent Matching Logic
+* **Keyword Highlighting:** Clear visual indicators of terms used in the automated matching process.
+* **Evidence-Based Support:** Decision support backed by visible data points for user accountability.
+
+### Recommended Parents for Matching
+* **Top 5 Recommendations:** Ranked by confidence score to aid the user in manual selection.
+* **Transparency:** Display of matching terms for every recommendation to explain the "why."
+
+### Cluster Matching
+* **Semantic Grouping:** Ability to match multiple similar articles to the same parent simultaneously based on semantic similarity.
+
+### Additional Features
+* **Toast Notifications:** Immediate visual feedback on all completed actions (e.g., "Match Verified").
+* **Orphan Article Handling:** A separate overview for articles that could not be matched automatically.
+* **Dark Mode:** Optional theme for improved visual comfort during extended analysis sessions.
+
+---
+
+### Summary
+The final dashboard iteration reflects both the functional requirements and the insights gathered during the user evaluation session. Key improvements focus on **workflow efficiency**, **transparency of automated matching**, and the **reduction of repetitive manual actions**. The resulting prototype provides a clear and task-oriented interface tailored specifically to the CBS matching process.
