@@ -154,9 +154,98 @@ Return to Dashboard
 ```
 
 ---
+## User Evaluation Session
 
-## UAT (User Testing)
-(incl. methodolody)
+To evaluate the usability and workflow design of the developed dashboard prototype, a user validation session was conducted with CBS analysts who actively use the current Matching Platform in practice.
+
+### Setup and Methodology
+
+The session was held remotely via Microsoft Teams and followed a predefined timetable and testing script. Participants were asked to share their screen and complete a series of predefined tasks while verbalizing their thoughts using a Think Aloud approach.
+
+The evaluation combined the following usability methods:
+
+- **Hallway Usability Testing** – short goal-based tasks to quickly identify navigation and workflow issues  
+- **Think Aloud Study** – capturing user reasoning and interaction behavior  
+- **A/B Interface Comparison** – comparing the current CBS system with the developed dashboard prototype  
+
+The session consisted of two main parts:
+
+1. **Navigation testing** within the developed dashboard  
+2. **Workflow comparison**, where identical matching tasks were executed in both the current system and the prototype  
+
+Task completion time and task success were recorded for each task.
+
+---
+
+### Task Performance Comparison
+
+The table below shows the results for Part 2 (workflow tasks) in both systems.
+
+| Task | Description | Current System Success | Current System Time | Prototype Success | Prototype Time |
+|------|------------|----------------------|--------------------|------------------|---------------|
+| 1 | Search CBS article and open page | Yes | 0:07 | Yes | 0:45 |
+| 2 | Filter media articles | – | – | Yes | 0:10 |
+| 3 | Match three media articles | Yes | 0:21 | Yes | 1:50 |
+| 4 | Open CBS article and citing media article | – | – | – | – |
+
+---
+
+### Key Findings
+
+#### Navigation and Interface
+
+- Users were able to complete most navigation tasks successfully  
+- Some confusion occurred between CBS articles (parents) and media articles (children) due to layout emphasis  
+- The visual focus on CBS articles caused users to initially overlook the media article list  
+- The “Matchen” button label was interpreted as directly confirming a match instead of opening the matching page  
+
+Users suggested switching the parent-child layout to better reflect their usual workflow, which starts from CBS publications.
+
+#### Workflow Comparison
+
+**Current system limitations:**
+
+- Limited visibility of CBS article content during matching  
+- Frequent switching between the matching platform and media portal  
+- No bulk matching functionality  
+
+**Prototype improvements observed:**
+
+- Matching tasks could be performed within a single interface  
+- Confidence scores helped prioritize easy vs. complex matches  
+- Highlighted keywords made match reasoning more transparent  
+- Bulk verification enabled multiple high-confidence matches to be confirmed at once  
+
+Some usability issues were noted in the prototype, including:
+
+- Lack of scrolling in certain modal views  
+- Desire to automatically open the next article after completing a match  
+- Clearer handling of unmatched (orphan) articles  
+
+#### Overall Feedback
+
+Participants described the developed dashboard as:
+
+- Clean and visually calm  
+- Easy to use after a short learning period  
+- Well structured for matching-focused tasks  
+
+Positive elements highlighted included:
+
+- Confidence-based grouping of matches  
+- Transparent keyword highlighting  
+- Centralized workflow without switching systems  
+
+There were no major usability blockers identified.
+
+---
+
+### Key Takeaways Usability Evalutation
+
+The user evaluation indicates that the redesigned dashboard better supports the matching workflow compared to the current system. The prototype aligns more closely with analyst working patterns by focusing on task-oriented validation, transparency, and reduced manual interactions.
+
+While some layout and interaction refinements are needed, the results suggest that the user-centered design approach improves usability and workflow clarity.
+
 
 ---
 
