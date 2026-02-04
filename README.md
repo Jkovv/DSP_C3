@@ -275,7 +275,7 @@ To use the sample code:
     npm start
     ```
 
-    ## Dashboard Prototype Setup and Usage
+## Dashboard Prototype Setup and Usage
 
 The interactive dashboard prototype is built with **TypeScript and React**. It serves as a functional front-end concept for the redesigned CBS Matching Platform, focusing on visualising validation workflows and usability improvements. 
 
