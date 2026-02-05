@@ -119,6 +119,7 @@ To ensure scientific validity, the evaluation suite implements:
     ```bash
     python -m spacy download nl_core_news_lg
     ```
+    # Note: The S-BERT model (paraphrase-multilingual-MiniLM-L12-v2) will download automatically on the first run of preprocessing.py
 
 ---
 
