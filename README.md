@@ -252,7 +252,7 @@ While some layout and interaction refinements are needed, the results suggest th
 
 ## Results – Dashboard Improvement
 
-This section presents (1) instructions for using the provided sample frontend code for dashboard development and (2) the main features of the final dashboard iteration after incorporating feedback from the user evaluation session. The dasboard prototype can be interacted with through its [Figma Site](https://bear-thumb-72325869.figma.site/) and a walkthrough of it can be watched [here](https://youtu.be/JFvyypkzkgs)
+This section presents (1) instructions for using the provided sample frontend code for dashboard development and (2) the main features of the final dashboard iteration after incorporating feedback from the user evaluation session. The dasboard prototype can be interacted with through its [Figma Site](https://bear-thumb-72325869.figma.site/) and a walkthrough of it can be watched [here](https://youtu.be/JFvyypkzkgs).
 
 ### Using the Prototype Frontend Code
 
