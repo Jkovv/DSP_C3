@@ -123,11 +123,6 @@ To ensure scientific validity, the evaluation suite implements:
 
 ---
 
-## Project Overview - Dashboard Improvement
-(short intro.)
-
----
-
 ## High-level Technical Userflow
 This is the high-level technical flow of the CBS Matching Platform, illustrating the end-to-end validation process from dashboard selection through verification, optional bulk reclassification, database updates, and return to the dashboard.
 ```
